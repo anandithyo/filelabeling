@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Table Cleaner - Rapihkan Tabel CSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f0f0;
+        }
+
+        .upload-section.dragover {
+            background: #e8e8ff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.6);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        .column-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .column-controls h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .column-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .column-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .column-checkbox:hover {
+            background: #e8f4fd;
+        }
+
+        .column-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .column-checkbox label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .empty-indicator {
+            color: #999;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+
+        th.hidden-column,
+        td.hidden-column {
+            display: none;
+        }
+
+        .sentiment-select {
+            padding: 6px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s ease;
+            width: 120px;
+        }
+
+        .sentiment-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .sentiment-select option[value="positive"] {
+            color: #28a745;
+        }
+
+        .sentiment-select option[value="negative"] {
+            color: #dc3545;
+        }
+
+        .sentiment-select option[value="neutral"] {
+            color: #6c757d;
+        }
+
+        .sentiment-positive {
+            background-color: #d4edda !important;
+            border-color: #28a745;
+        }
+
+        .sentiment-negative {
+            background-color: #f8d7da !important;
+            border-color: #dc3545;
+        }
+
+        .sentiment-neutral {
+            background-color: #f8f9fa !important;
+            border-color: #6c757d;
+        }
+
+        .sentiment-column {
+            min-width: 140px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧹 CSV Table Cleaner</h1>
+            <p>Upload CSV berantakan → Lihat tabel rapi → Download CSV bersih</p>
+        </div>
+
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">📄</div>
+                <h2>Upload File CSV Kamu</h2>
+                <p style="margin: 15px 0; color: #666;">Drag & drop file CSV atau klik tombol di bawah</p>
+                <div class="file-input-wrapper">
+                    <label for="csvFile" class="upload-btn">Pilih File CSV</label>
+                    <input type="file" id="csvFile" class="file-input" accept=".csv">
+                </div>
+            </div>
+
+            <div class="info-box hidden" id="infoBox">
+                <strong>ℹ️ Info:</strong> File berhasil dimuat! Data sudah dibersihkan dan ditampilkan di tabel di bawah.
+            </div>
+
+            <!-- Stats -->
+            <div class="stats hidden" id="statsSection">
+                <div class="stat-card">
+                    <h3 id="rowCount">0</h3>
+                    <p>Total Baris</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="columnCount">0</h3>
+                    <p>Total Kolom</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="fileSize">0 KB</h3>
+                    <p>Ukuran File</p>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="search-box hidden" id="searchBox">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Cari data dalam tabel...">
+            </div>
+
+            <!-- Column Controls -->
+            <div class="column-controls hidden" id="columnControls">
+                <h3>⚙️ Pilih Kolom yang Mau Ditampilkan</h3>
+                <div class="column-checkboxes" id="columnCheckboxes"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions hidden" id="actionsSection">
+                <button class="btn btn-success" id="downloadBtn" disabled>
+                    💾 Download CSV Bersih
+                </button>
+                <button class="btn btn-primary" id="copyBtn" disabled>
+                    📋 Copy Data
+                </button>
+                <button class="btn btn-warning" id="resetBtn">
+                    🔄 Reset / Upload Baru
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container hidden" id="tableContainer">
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Memproses data...</p>
+                </div>
+                <table id="dataTable" class="hidden">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csvData = [];
+        let headers = [];
+        let originalFileName = '';
+        let hiddenColumns = new Set();
+        let emptyColumns = new Set();
+        let sentimentLabels = []; // Array untuk menyimpan label sentiment setiap baris
+
+        const uploadSection = document.getElementById('uploadSection');
+        const csvFile = document.getElementById('csvFile');
+        const infoBox = document.getElementById('infoBox');
+        const statsSection = document.getElementById('statsSection');
+        const searchBox = document.getElementById('searchBox');
+        const columnControls = document.getElementById('columnControls');
+        const columnCheckboxes = document.getElementById('columnCheckboxes');
+        const actionsSection = document.getElementById('actionsSection');
+        const tableContainer = document.getElementById('tableContainer');
+        const loading = document.getElementById('loading');
+        const dataTable = document.getElementById('dataTable');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const rowCount = document.getElementById('rowCount');
+        const columnCount = document.getElementById('columnCount');
+        const fileSize = document.getElementById('fileSize');
+        const searchInput = document.getElementById('searchInput');
+
+        // Drag and drop
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                handleFile(file);
+            } else {
+                alert('Mohon upload file CSV!');
+            }
+        });
+
+        csvFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            originalFileName = file.name.replace('.csv', '');
+            const size = (file.size / 1024).toFixed(2);
+            fileSize.textContent = size + ' KB';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                parseCSV(e.target.result);
+            };
+            reader.readAsText(file);
+
+            // Show loading
+            tableContainer.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            dataTable.classList.add('hidden');
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            
+            // Parse header dari baris pertama
+            let firstLine = lines[0];
+            
+            // Step 1: Hapus quote terluar dan semicolon di akhir
+            firstLine = firstLine.replace(/^"|"$/g, '').replace(/;+$/g, '');
+            
+            // Step 2: Split by comma (simple split karena structure sederhana)
+            const rawHeaders = firstLine.split(',');
+            
+            // Step 3: Clean setiap header
+            headers = rawHeaders.map(h => {
+                // Hapus semua quotes (single dan double)
+                let cleaned = h.replace(/["']/g, '');
+                // Hapus semua semicolon
+                cleaned = cleaned.replace(/;/g, '');
+                // Trim whitespace
+                cleaned = cleaned.trim();
+                return cleaned;
+            });
+            
+            // Cari index kolom full_text untuk analisis sentiment
+            const fullTextIndex = headers.findIndex(h => 
+                h.toLowerCase() === 'full_text' || h.toLowerCase() === 'text' || h.toLowerCase() === 'content'
+            );
+            
+            csvData = [];
+            sentimentLabels = []; // Reset sentiment labels
+            
+            // Parse data mulai dari baris kedua
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+                
+                // Bersihkan line dari quotes terluar dan semicolon di akhir
+                let cleanLine = line.replace(/^"|"$/g, '');
+                cleanLine = cleanLine.replace(/;+$/g, '');
+                
+                // Split by comma tapi perhatikan quotes
+                const values = [];
+                let currentValue = '';
+                let insideQuotes = false;
+                
+                for (let j = 0; j < cleanLine.length; j++) {
+                    const char = cleanLine[j];
+                    const nextChar = cleanLine[j + 1];
+                    
+                    if (char === '"' && nextChar === '"') {
+                        currentValue += '"';
+                        j++; // Skip next quote
+                    } else if (char === '"') {
+                        insideQuotes = !insideQuotes;
+                    } else if (char === ',' && !insideQuotes) {
+                        values.push(cleanCellValue(currentValue));
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                
+                // Push last value
+                values.push(cleanCellValue(currentValue));
+                
+                // Pastikan jumlah kolom sama dengan header
+                while (values.length < headers.length) {
+                    values.push('');
+                }
+                
+                // Trim ke jumlah kolom yang sesuai header
+                values.length = headers.length;
+                
+                // Cek apakah baris ini benar-benar kosong (semua cell kosong)
+                const isEmptyRow = values.every(v => !v || !v.trim());
+                
+                if (!isEmptyRow) {
+                    csvData.push(values);
+                    
+                    // Auto-analyze sentiment berdasarkan full_text
+                    if (fullTextIndex !== -1 && values[fullTextIndex]) {
+                        const sentiment = analyzeSentiment(values[fullTextIndex]);
+                        sentimentLabels.push(sentiment);
+                    } else {
+                        sentimentLabels.push('neutral');
+                    }
+                }
+            }
+            
+            // Deteksi kolom yang kosong atau hampir kosong
+            detectEmptyColumns();
+            
+            displayTable();
+            createColumnControls();
+            updateStats();
+            updateSentimentStats();
+            enableActions();
+        }
+
+        function cleanCellValue(value) {
+            // Trim whitespace
+            let cleaned = value.trim();
+            
+            // Hapus quotes di awal dan akhir (bisa lebih dari satu)
+            cleaned = cleaned.replace(/^"+|"+$/g, '');
+            
+            // Hapus semicolon yang tidak perlu
+            cleaned = cleaned.replace(/;+$/g, '');
+            
+            // Jika hasilnya cuma whitespace atau semicolon, return empty string
+            if (cleaned.match(/^[\s;]*$/)) {
+                cleaned = '';
+            }
+            
+            return cleaned;
+        }
+
+        function analyzeSentiment(text) {
+            if (!text || !text.trim()) return 'neutral';
+            
+            const lowerText = text.toLowerCase();
+            
+            // Kata-kata positif (Indonesia & Inggris)
+            const positiveWords = [
+                'menang', 'bagus', 'hebat', 'keren', 'sempurna', 'luar biasa', 'mantap',
+                'sukses', 'cemerlang', 'brilian', 'fantastis', 'memukau', 'impresif',
+                'win', 'good', 'great', 'excellent', 'amazing', 'awesome', 'brilliant',
+                'fantastic', 'wonderful', 'impressive', 'best', 'love', 'perfect',
+                'kemenangan', 'juara', 'terbaik', 'solid', 'tajam', 'cerdas',
+                'menakjubkan', 'spektakuler', 'dominan', 'comeback', 'heroik',
+                'dramatis', 'clutch', 'gokil', 'mantul', 'jos', 'top'
+            ];
+            
+            // Kata-kata negatif (Indonesia & Inggris)
+            const negativeWords = [
+                'kalah', 'buruk', 'jelek', 'gagal', 'kecewa', 'payah', 'lemah',
+                'hancur', 'bobrok', 'tolol', 'bodoh', 'sampah', 'mengecewakan',
+                'lose', 'bad', 'terrible', 'awful', 'poor', 'worst', 'fail',
+                'disappointing', 'pathetic', 'useless', 'weak', 'disaster',
+                'kekalahan', 'ancur', 'parah', 'amburadul', 'berantakan',
+                'menyedihkan', 'tragis', 'tidak boleh', 'jangan', 'tolak',
+                'pemecatan', 'dipecat', 'mundur', 'resign'
+            ];
+            
+            let positiveScore = 0;
+            let negativeScore = 0;
+            
+            // Hitung skor positif
+            positiveWords.forEach(word => {
+                const regex = new RegExp('\\b' + word + '\\w*\\b', 'gi');
+                const matches = lowerText.match(regex);
+                if (matches) {
+                    positiveScore += matches.length;
+                }
+            });
+            
+            // Hitung skor negatif
+            negativeWords.forEach(word => {
+                const regex = new RegExp('\\b' + word + '\\w*\\b', 'gi');
+                const matches = lowerText.match(regex);
+                if (matches) {
+                    negativeScore += matches.length;
+                }
+            });
+            
+            // Deteksi emoji
+            if (text.match(/[😀😃😄😁😆😊☺️🙂😍🥰😘💖❤️👍👏🎉🔥💪✨]/)) {
+                positiveScore += 1;
+            }
+            if (text.match(/[😢😭😞😔😟😠😡🤬💔👎]/)) {
+                negativeScore += 1;
+            }
+            
+            // Tentukan sentiment
+            if (positiveScore > negativeScore) {
+                return 'positive';
+            } else if (negativeScore > positiveScore) {
+                return 'negative';
+            } else {
+                return 'neutral';
+            }
+        }
+
+        function detectEmptyColumns() {
+            emptyColumns.clear();
+            hiddenColumns.clear();
+            
+            headers.forEach((header, colIndex) => {
+                // Jangan auto-hide kolom username
+                if (header.toLowerCase() === 'username') {
+                    return;
+                }
+                
+                let emptyCount = 0;
+                let totalRows = csvData.length;
+                
+                csvData.forEach(row => {
+                    const cellValue = row[colIndex] || '';
+                    // Cek jika cell kosong atau cuma whitespace
+                    if (!cellValue.trim()) {
+                        emptyCount++;
+                    }
+                });
+                
+                // Jika lebih dari 95% kosong, tandai sebagai empty
+                if (emptyCount / totalRows > 0.95) {
+                    emptyColumns.add(colIndex);
+                    hiddenColumns.add(colIndex); // Auto-hide kolom kosong
+                }
+            });
+        }
+
+        function createColumnControls() {
+            columnCheckboxes.innerHTML = '';
+            
+            headers.forEach((header, index) => {
+                const div = document.createElement('div');
+                div.className = 'column-checkbox';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `col-${index}`;
+                checkbox.checked = !hiddenColumns.has(index);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        hiddenColumns.delete(index);
+                    } else {
+                        hiddenColumns.add(index);
+                    }
+                    displayTable();
+                });
+                
+                const label = document.createElement('label');
+                label.htmlFor = `col-${index}`;
+                label.textContent = header;
+                
+                if (emptyColumns.has(index)) {
+                    const emptyIndicator = document.createElement('span');
+                    emptyIndicator.className = 'empty-indicator';
+                    emptyIndicator.textContent = '(kosong)';
+                    label.appendChild(emptyIndicator);
+                }
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                columnCheckboxes.appendChild(div);
+            });
+            
+            columnControls.classList.remove('hidden');
+        }
+
+        function displayTable(filteredData = null) {
+            const dataToDisplay = filteredData || csvData;
+            const dataIndices = filteredData ? 
+                dataToDisplay.map(row => csvData.indexOf(row)) : 
+                csvData.map((_, i) => i);
+            
+            // Create header
+            tableHead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            headers.forEach((header, index) => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                if (hiddenColumns.has(index)) {
+                    th.classList.add('hidden-column');
+                }
+                headerRow.appendChild(th);
+            });
+            
+            // Tambah header Sentiment
+            const sentimentTh = document.createElement('th');
+            sentimentTh.textContent = 'Sentiment';
+            sentimentTh.className = 'sentiment-column';
+            sentimentTh.style.textAlign = 'center';
+            headerRow.appendChild(sentimentTh);
+            
+            tableHead.appendChild(headerRow);
+
+            // Create body
+            tableBody.innerHTML = '';
+            dataToDisplay.forEach((row, displayIndex) => {
+                const actualIndex = dataIndices[displayIndex];
+                const tr = document.createElement('tr');
+                
+                row.forEach((cell, index) => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    if (hiddenColumns.has(index)) {
+                        td.classList.add('hidden-column');
+                    }
+                    tr.appendChild(td);
+                });
+                
+                // Tambah cell sentiment dengan dropdown
+                const sentimentTd = document.createElement('td');
+                sentimentTd.className = 'sentiment-column';
+                
+                const select = document.createElement('select');
+                select.className = 'sentiment-select';
+                const currentSentiment = sentimentLabels[actualIndex] || 'neutral';
+                select.value = currentSentiment;
+                
+                const options = [
+                    { value: 'positive', text: '🟢 Positif', color: '#28a745' },
+                    { value: 'negative', text: '🔴 Negatif', color: '#dc3545' },
+                    { value: 'neutral', text: '⚪ Netral', color: '#6c757d' }
+                ];
+                
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.text;
+                    if (opt.value === currentSentiment) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                
+                select.addEventListener('change', (e) => {
+                    sentimentLabels[actualIndex] = e.target.value;
+                    // Update class untuk visual feedback
+                    select.className = 'sentiment-select sentiment-' + e.target.value;
+                    // Update stats
+                    updateSentimentStats();
+                });
+                
+                // Set initial class dengan warna
+                select.className = 'sentiment-select sentiment-' + currentSentiment;
+                
+                sentimentTd.appendChild(select);
+                tr.appendChild(sentimentTd);
+                tableBody.appendChild(tr);
+            });
+
+            // Hide loading, show table
+            loading.classList.add('hidden');
+            dataTable.classList.remove('hidden');
+        }
+
+        function updateStats() {
+            rowCount.textContent = csvData.length;
+            columnCount.textContent = headers.length;
+            
+            infoBox.classList.remove('hidden');
+            statsSection.classList.remove('hidden');
+            searchBox.classList.remove('hidden');
+        }
+
+        function updateSentimentStats() {
+            // Hitung jumlah setiap sentiment
+            const sentimentCounts = {
+                positive: sentimentLabels.filter(s => s === 'positive').length,
+                negative: sentimentLabels.filter(s => s === 'negative').length,
+                neutral: sentimentLabels.filter(s => s === 'neutral').length
+            };
+            
+            // Update atau tambah card sentiment stats
+            const existingSentimentCard = document.getElementById('sentimentStatsCard');
+            if (existingSentimentCard) {
+                existingSentimentCard.remove();
+            }
+            
+            const sentimentCard = document.createElement('div');
+            sentimentCard.id = 'sentimentStatsCard';
+            sentimentCard.className = 'stat-card';
+            sentimentCard.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            sentimentCard.innerHTML = `
+                <h3>🤖 Auto-Labeled</h3>
+                <p style="font-size: 0.9em; margin-top: 5px;">
+                    🟢 ${sentimentCounts.positive} Positif<br>
+                    🔴 ${sentimentCounts.negative} Negatif<br>
+                    ⚪ ${sentimentCounts.neutral} Netral
+                </p>
+            `;
+            
+            statsSection.appendChild(sentimentCard);
+        }
+
+        function enableActions() {
+            actionsSection.classList.remove('hidden');
+            downloadBtn.disabled = false;
+            copyBtn.disabled = false;
+        }
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayTable();
+                return;
+            }
+            
+            const filteredData = csvData.filter(row => {
+                return row.some(cell => 
+                    cell.toLowerCase().includes(searchTerm)
+                );
+            });
+            
+            displayTable(filteredData);
+        });
+
+        // Download CSV
+        downloadBtn.addEventListener('click', () => {
+            // Filter headers dan data berdasarkan kolom yang visible
+            const visibleHeaders = headers.filter((_, index) => !hiddenColumns.has(index));
+            // Tambah header Sentiment
+            visibleHeaders.push('sentiment');
+            
+            const visibleData = csvData.map((row, rowIndex) => {
+                const visibleRow = row.filter((_, index) => !hiddenColumns.has(index));
+                // Tambah sentiment label
+                visibleRow.push(sentimentLabels[rowIndex] || 'neutral');
+                return visibleRow;
+            });
+            
+            const csvContent = [
+                visibleHeaders.join(','),
+                ...visibleData.map(row => row.map(cell => {
+                    // Escape quotes and wrap in quotes if contains comma
+                    if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+                        return `"${cell.replace(/"/g, '""')}"`;
+                    }
+                    return cell;
+                }).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = originalFileName + '_cleaned_labeled.csv';
+            link.click();
+        });
+
+        // Copy data
+        copyBtn.addEventListener('click', () => {
+            const visibleHeaders = headers.filter((_, index) => !hiddenColumns.has(index));
+            visibleHeaders.push('sentiment');
+            
+            const visibleData = csvData.map((row, rowIndex) => {
+                const visibleRow = row.filter((_, index) => !hiddenColumns.has(index));
+                visibleRow.push(sentimentLabels[rowIndex] || 'neutral');
+                return visibleRow;
+            });
+            
+            const text = [
+                visibleHeaders.join('\t'),
+                ...visibleData.map(row => row.join('\t'))
+            ].join('\n');
+
+            navigator.clipboard.writeText(text).then(() => {
+                copyBtn.textContent = '✓ Berhasil di-Copy!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Copy Data';
+                }, 2000);
+            });
+        });
+
+        // Reset
+        resetBtn.addEventListener('click', () => {
+            csvData = [];
+            headers = [];
+            originalFileName = '';
+            hiddenColumns.clear();
+            emptyColumns.clear();
+            sentimentLabels = [];
+            csvFile.value = '';
+            
+            infoBox.classList.add('hidden');
+            statsSection.classList.add('hidden');
+            searchBox.classList.add('hidden');
+            columnControls.classList.add('hidden');
+            actionsSection.classList.add('hidden');
+            tableContainer.classList.add('hidden');
+            
+            searchInput.value = '';
+        });
+    </script>
+</body>
+</html>
